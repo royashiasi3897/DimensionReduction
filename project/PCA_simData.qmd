@@ -1,0 +1,97 @@
+---
+title: "PCA (simulated data)"
+format: docx
+editor: visual
+format: 
+  docx:
+    reference-doc:  F:/Aktenschrank/Kontakte/CQ_Bildung/Projekte/ABI/RClass2023/RScripts/quarto_template.docx
+editor: visual
+execute: 
+  echo: false
+  warning: false
+  output: asis
+fig-dpi: 300
+fig-width: 6
+fig-height: 8
+tbl-cap-location: top
+---
+
+## **Principal Component Analysis (PCA) for simulated Data**
+
+```{r setup}
+pacman::p_load(conflicted,
+               wrappedtools,
+               tidyverse,
+               ggfortify, GGally,
+               PCAtools, # bioconductor
+               FactoMineR,
+               writexl,readxl)
+
+# conflict_scout()
+conflict_prefer('slice','dplyr')
+conflict_prefer("filter", "dplyr")
+conflict_prefer('screeplot','stats')
+conflict_prefer('biplot','stats')
+```
+
+```{r preparation}
+rawdata <- read_csv("F:/bioinformatic_weiterbildung_final/internship/stage_2/simulated_data/example_data.csv")
+
+initial_rawdata <- rawdata
+
+rawdata <- rawdata |>
+  pivot_wider(names_from = metabolites,
+              values_from = values)
+
+pivoted_metabolites_rawdata <- rawdata
+write_xlsx(pivoted_metabolites_rawdata, "F:/bioinformatic_weiterbildung_final/longitudinalOmics/Data/pivoted_metabolites.xlsx")
+
+#slice
+rawdata <- read_excel(path = 'F:/bioinformatic_weiterbildung_final/longitudinalOmics/Data/pivoted_metabolites.xlsx',
+                 range = 'A1:E1801')
+sliced_metabolite1 <- rawdata
+
+#slicepivot
+sliced_pivot <- sliced_metabolite1 |>
+  pivot_wider(names_from = time,
+              values_from = metabolite_1)
+
+metabolite1<-sliced_pivot
+write_xlsx(metabolite1, "F:/bioinformatic_weiterbildung_final/longitudinalOmics/Data/metabolite1.xlsx")
+
+
+rawdata <- pivoted_metabolites_rawdata
+predvars <- FindVars(c('metabolite'))
+```
+
+```{r test for normality}
+#ggplot(rawdata,aes(metabolite_1,fill=treatment))+geom_density(alpha=.3)
+
+```
+
+```{r results}
+pca_out <- prcomp(rawdata |> select(predvars$names),
+                  center = T,scale. = T)
+summary(pca_out)
+
+screeplot(pca_out,npcs = 100)
+
+pca_out$rotation[1:20,1:5]
+```
+
+```{r visualization}
+autoplot(pca_out)
+autoplot(pca_out, data = rawdata, colour= "sex")
+autoplot(pca_out, data = rawdata, colour= "sex",
+         loadings = TRUE, loadings.colour = "black",
+         loadings.label = TRUE, loadings.label.size = 4)
+
+#contribution of variables to component
+autoplot(pca_out, data = rawdata, colour= "treatment",
+         x=1,y=3)
+autoplot(pca_out, data = rawdata, colour= "treatment",
+         x=2,y=3)
+rawdata <- pca_out$x[,1:14] |> 
+  as_tibble() |> 
+  cbind(rawdata)
+```

@@ -1,0 +1,76 @@
+---
+title: "PCA_time1_simData"
+format: docx
+editor: visual
+format: 
+  docx:
+    reference-doc:  F:/Aktenschrank/Kontakte/CQ_Bildung/Projekte/ABI/RClass2023/RScripts/quarto_template.docx
+editor: visual
+execute: 
+  echo: false
+  warning: false
+  output: asis
+fig-dpi: 300
+fig-width: 6
+fig-height: 8
+tbl-cap-location: top
+---
+
+## PCA analysis for simulated data at time 1
+
+I just wanted to compare the PCA results at one timepoint
+
+```{r load the packages}
+pacman::p_load(conflicted,
+               wrappedtools,
+               tidyverse,
+               ggfortify, GGally,
+               PCAtools, # bioconductor
+               FactoMineR,
+               writexl,readxl)
+
+# conflict_scout()
+conflict_prefer('slice','dplyr')
+conflict_prefer("filter", "dplyr")
+conflict_prefer('screeplot','stats')
+conflict_prefer('biplot','stats')
+```
+
+```{r data preparation}
+
+rawdata <- read_csv("F:/bioinformatic_weiterbildung_final/internship/stage_2/simulated_data/example_data.csv")
+
+initial_rawdata <- rawdata
+
+rawdata <- rawdata |>
+  pivot_wider(names_from = time,
+              values_from = values)
+
+pivoted_simtime1 <- rawdata
+write_xlsx(pivoted_simtime1, "F:/bioinformatic_weiterbildung_final/longitudinalOmics/Rscripts/pivoted_simtime1.xlsx")
+
+#slice
+rawdata <- read_excel(path = 'F:/bioinformatic_weiterbildung_final/longitudinalOmics/Rscripts/pivoted_simtime1.xlsx',
+                 range = 'A1:E20001')
+sliced_simtime1 <- rawdata
+
+#slicepivot
+sliced_pivot <- sliced_simtime1 |>
+  pivot_wider(names_from = metabolites,
+              values_from = "1")
+
+rawdata <- sliced_pivot
+predvars <- FindVars(c('metabolite'))
+
+```
+
+```{r results}
+pca_out <- prcomp(rawdata |> select(predvars$names),
+                  center = T,scale. = T)
+summary(pca_out)
+
+screeplot(pca_out,npcs = 100)
+
+pca_out$rotation[1:20,1:5]
+
+```

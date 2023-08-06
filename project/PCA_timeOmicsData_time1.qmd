@@ -1,0 +1,48 @@
+---
+title: "PCA for timeOmics data "
+format: html
+editor: visual
+---
+
+I just wanted to compare the PCA results at one time point for timeOmics package data
+
+```{r load the packages}
+pacman::p_load(conflicted,
+               wrappedtools,
+               tidyverse,
+               ggfortify, GGally,
+               PCAtools, # bioconductor
+               FactoMineR,
+               writexl,readxl)
+
+# conflict_scout()
+conflict_prefer('slice','dplyr')
+conflict_prefer("filter", "dplyr")
+conflict_prefer('screeplot','stats')
+conflict_prefer('biplot','stats')
+```
+
+```{r data preparation}
+
+rawdata <- read_excel("F:/bioinformatic_weiterbildung_final/longitudinalOmics/Data/timeOmics_data.xlsx")
+
+initial_rawdata <- rawdata
+
+#time1_data <- rawdata[rawdata$time =='_1',]
+library(tibble) 
+head(rawdata[,1:7])
+#rawdata <- time1_data
+predvars <- FindVars(c('c'))
+
+```
+
+```{r results}
+pca_out <- prcomp(rawdata |> select(predvars$names),
+                  center = T,scale. = T)
+summary(pca_out)
+
+screeplot(pca_out,npcs = 21)
+
+pca_out$rotation[1:10,1:5]
+
+```

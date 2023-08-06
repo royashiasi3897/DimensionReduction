@@ -1,0 +1,46 @@
+---
+title: "PCA for timeOmics data "
+format: pdf
+editor: visual
+---
+
+## PCA stats Package with timeOmics data
+
+```{r setup, results='hide', message=FALSE, warning=FALSE}
+
+pacman::p_load(conflicted,
+               wrappedtools,
+               tidyverse,
+               ggfortify, GGally,
+               PCAtools, # bioconductor
+               FactoMineR,
+               writexl,readxl)
+
+# conflict_scout()
+conflict_prefer('slice','dplyr')
+conflict_prefer("filter", "dplyr")
+conflict_prefer('screeplot','stats')
+conflict_prefer('biplot','stats')
+```
+
+```{r data preparation}
+
+rawdata <- read_excel("F:/bioinformatic_weiterbildung_final/longitudinalOmics/Data/timeOmics_data.xlsx")
+
+head(rawdata[,1:7])
+predvars <- FindVars(c('c'))
+
+```
+
+Note: after running this code you can see that there is no difference between the result of mixOmics::PCA and stats::prcomp
+
+```{r results}
+pca_out <- prcomp(rawdata |> select(predvars$names),
+                  center = T,scale. = T)
+summary(pca_out)
+
+screeplot(pca_out,npcs = 21)
+
+pca_out$rotation[1:10,1:5]
+
+```
